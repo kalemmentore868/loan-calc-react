@@ -1,13 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DisplayBox from "./DisplayBox";
 
 const LoanBox = () => {
-  const [loanAmount, setLoanAmount] = useState(0);
-  const [loanTerm, setLoanTerm] = useState(0);
+  const [loanAmount, setLoanAmount] = useState("");
+  const [loanTerm, setLoanTerm] = useState("");
   const [installment, setInstallment] = useState(0);
   const [display, setDisplay] = useState(false);
+  const [amountErrors, setAmountErrors] = useState(" ");
+  const [termErrors, setTermErrors] = useState(" ");
 
-  const calculateLoan = (loanTerm, loanAmount) => {
+  useEffect(() => {
+    validateFields();
+  }, [loanAmount, loanTerm]);
+
+  const validateFields = () => {
+    if (loanAmount == "") {
+      setAmountErrors((prevState) => "Loan Amount cannot be empty");
+    } else if (loanAmount <= 0) {
+      setAmountErrors(
+        (prevState) => "Loan Amount cannot be less than or equal to 0"
+      );
+    } else if (isNaN(loanAmount)) {
+      setAmountErrors((prevState) => "Loan Amount must be a valid number");
+    } else {
+      setAmountErrors((prevState) => "");
+    }
+
+    if (loanTerm == "") {
+      setTermErrors((prevState) => "Loan Term cannot be empty");
+    } else if (loanTerm <= 0) {
+      setTermErrors(
+        (prevState) => "Loan Term cannot be less than or equal to 0"
+      );
+    } else if (isNaN(loanTerm)) {
+      setTermErrors((prevState) => "Loan term must be a valid number");
+    } else {
+      setTermErrors((prevState) => "");
+    }
+  };
+
+  const calculateLoan = () => {
     const numberOfPayments = loanTerm * 12;
     const monthlyInterest = 5 / 100 / 12;
     const sum = monthlyInterest + 1;
@@ -15,8 +47,11 @@ const LoanBox = () => {
     const toDivide = 1 - sumPower;
     const monthlyInterestOnLoan = monthlyInterest * loanAmount;
     const monthlyInstallment = monthlyInterestOnLoan / toDivide;
-    setDisplay(true);
-    setInstallment(monthlyInstallment.toFixed(2));
+
+    if (amountErrors === "" && termErrors === "") {
+      setDisplay(true);
+      setInstallment(monthlyInstallment.toFixed(2));
+    }
   };
 
   const closeModal = () => setDisplay(false);
@@ -34,6 +69,7 @@ const LoanBox = () => {
             onChange={(e) => setLoanAmount(e.target.value)}
             value={loanAmount}
           />
+          <p>{amountErrors}</p>
           <hr />
         </div>
         <div>
@@ -45,6 +81,7 @@ const LoanBox = () => {
             onChange={(e) => setLoanTerm(e.target.value)}
             value={loanTerm}
           />
+          <p>{termErrors}</p>
           <hr />
         </div>
         <div>
@@ -54,9 +91,7 @@ const LoanBox = () => {
           <hr />
         </div>
 
-        <button onClick={() => calculateLoan(loanTerm, loanAmount)}>
-          Calculate
-        </button>
+        <button onClick={calculateLoan}>Calculate</button>
       </div>
       {display && (
         <DisplayBox installment={installment} closeModal={closeModal} />
